@@ -468,7 +468,8 @@ export default {
       return new Response('无效的请求路径', { 
         status: 404,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...corsHeaders()
         }
       });
     } catch (err) {
@@ -478,7 +479,8 @@ export default {
       }), { 
         status: 500,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...corsHeaders()
         }
       });
     }
