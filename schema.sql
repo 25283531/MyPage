@@ -30,9 +30,10 @@ CREATE TABLE Settings (
     page_bg_image TEXT,
     nav_bg_color TEXT,
     nav_bg_image TEXT,
+    theme_json TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO Settings (id, page_bg_color, page_bg_image, nav_bg_color, nav_bg_image)
-VALUES (1, NULL, NULL, NULL, NULL);
+INSERT INTO Settings (id, page_bg_color, page_bg_image, nav_bg_color, nav_bg_image, theme_json)
+VALUES (1, '#F5F5F5', NULL, '#FFFFFF', NULL, '{"primary":"#409EFF","primaryHover":"#3A8EE6","danger":"#F56C6C","gray":"#C0C4CC","accent":"#69C0FF","textMain":"#303133","textMuted":"#606266","border":"#E0E0E0","navActiveBg":"#ECF5FF"}');

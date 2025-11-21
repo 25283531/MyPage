@@ -76,26 +76,26 @@ function updateAdminButton() {
     if (isAdmin) {
         if (isEditMode) {
             adminButton.innerHTML = `
-                <button class="admin-button" onclick="handleLogout()">
+                <button class="admin-button btn btn-danger" onclick="handleLogout()">
                     <i class="fas fa-sign-out-alt"></i> 退出登录
                 </button>
-                <button class="admin-button" onclick="exitEditMode()">
+                <button class="admin-button btn btn-gray" onclick="exitEditMode()">
                     <i class="fas fa-times"></i> 退出编辑
                 </button>
             `;
         } else {
             adminButton.innerHTML = `
-                <button class="admin-button" onclick="handleLogout()">
+                <button class="admin-button btn btn-danger" onclick="handleLogout()">
                     <i class="fas fa-sign-out-alt"></i> 退出登录
                 </button>
-                <button class="admin-button" onclick="enterEditMode()">
+                <button class="admin-button btn btn-primary" onclick="enterEditMode()">
                     <i class="fas fa-edit"></i> 编辑
                 </button>
             `;
         }
     } else {
         adminButton.innerHTML = `
-            <button class="admin-button" onclick="openAdminModal()">
+            <button class="admin-button btn btn-primary" onclick="openAdminModal()">
                 <i class="fas fa-user-lock"></i> 管理员登录
             </button>
         `;
@@ -416,13 +416,13 @@ async function loadNavigation() {
         if (isEditMode) {
             html += `
                 <div class="admin-controls">
-                    <button onclick="openGroupModal()">
+                    <button class="btn btn-primary" onclick="openGroupModal()">
                         <i class="fas fa-folder-plus"></i> 添加分组
                     </button>
-                    <button onclick="openLinkModal()">
+                    <button class="btn btn-primary" onclick="openLinkModal()">
                         <i class="fas fa-link"></i> 添加链接
                     </button>
-                    <button onclick="openSettingsModal()">
+                    <button class="btn btn-accent" onclick="openSettingsModal()">
                         <i class="fas fa-paint-roller"></i> 页面设置
                     </button>
                 </div>
@@ -522,11 +522,11 @@ function createLinkCard(link) {
             <div class="link-url-tooltip">${link.url}</div>
             ${isEditMode ? `
                 <div class="link-actions">
-                    <button onclick="openLinkModal(${link.id})"><i class="fas fa-edit"></i> 编辑</button>
-                    <button onclick="deleteLinkConfirm(${link.id})"><i class="fas fa-trash"></i> 删除</button>
+                    <button class="btn btn-primary" onclick="openLinkModal(${link.id})"><i class="fas fa-edit"></i> 编辑</button>
+                    <button class="btn btn-danger" onclick="deleteLinkConfirm(${link.id})"><i class="fas fa-trash"></i> 删除</button>
                     <div class="order-actions">
-                        <button onclick="moveLinkUp(${link.id}, ${link.group_id})"><i class="fas fa-arrow-up"></i></button>
-                        <button onclick="moveLinkDown(${link.id}, ${link.group_id})"><i class="fas fa-arrow-down"></i></button>
+                        <button class="btn btn-gray" onclick="moveLinkUp(${link.id}, ${link.group_id})"><i class="fas fa-arrow-up"></i></button>
+                        <button class="btn btn-gray" onclick="moveLinkDown(${link.id}, ${link.group_id})"><i class="fas fa-arrow-down"></i></button>
                     </div>
                 </div>
             ` : ''}
@@ -873,17 +873,17 @@ function getGroupActions(groupId) {
     return `
         <div class="group-actions">
             <div class="order-actions">
-                <button onclick="moveGroupUp(${groupId})" title="上移">
+                <button class="btn btn-gray" onclick="moveGroupUp(${groupId})" title="上移">
                     <i class="fas fa-arrow-up"></i>
                 </button>
-                <button onclick="moveGroupDown(${groupId})" title="下移">
+                <button class="btn btn-gray" onclick="moveGroupDown(${groupId})" title="下移">
                     <i class="fas fa-arrow-down"></i>
                 </button>
             </div>
-            <button onclick="openGroupModal(${groupId})" title="编辑">
+            <button class="btn btn-primary" onclick="openGroupModal(${groupId})" title="编辑">
                 <i class="fas fa-edit"></i>
             </button>
-            <button onclick="deleteGroupConfirm(${groupId})" title="删除">
+            <button class="btn btn-danger" onclick="deleteGroupConfirm(${groupId})" title="删除">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
@@ -933,17 +933,17 @@ function getLinkCard(link) {
             ${isEditMode ? `
                 <div class="link-actions" onclick="event.preventDefault();">
                     <div class="order-actions">
-                        <button onclick="moveLinkUp(${link.id}, ${link.group_id})" title="上移">
+                        <button class="btn btn-gray" onclick="moveLinkUp(${link.id}, ${link.group_id})" title="上移">
                             <i class="fas fa-arrow-up"></i>
                         </button>
-                        <button onclick="moveLinkDown(${link.id}, ${link.group_id})" title="下移">
+                        <button class="btn btn-gray" onclick="moveLinkDown(${link.id}, ${link.group_id})" title="下移">
                             <i class="fas fa-arrow-down"></i>
                         </button>
                     </div>
-                    <button onclick="openLinkModal(${link.id})" title="编辑">
+                    <button class="btn btn-primary" onclick="openLinkModal(${link.id})" title="编辑">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button onclick="deleteLinkConfirm(${link.id})" title="删除">
+                    <button class="btn btn-danger" onclick="deleteLinkConfirm(${link.id})" title="删除">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -1054,6 +1054,19 @@ async function loadSettingsData() {
             if (document.getElementById('pageBgImage')) document.getElementById('pageBgImage').value = settings.page_bg_image || '';
             if (document.getElementById('navBgColor')) document.getElementById('navBgColor').value = settings.nav_bg_color || '';
             if (document.getElementById('navBgImage')) document.getElementById('navBgImage').value = settings.nav_bg_image || '';
+            const t = settings.theme || {};
+            if (document.getElementById('themePrimary')) document.getElementById('themePrimary').value = t.primary || '';
+            if (document.getElementById('themePrimaryHover')) document.getElementById('themePrimaryHover').value = t.primaryHover || '';
+            if (document.getElementById('themeDanger')) document.getElementById('themeDanger').value = t.danger || '';
+            if (document.getElementById('themeGray')) document.getElementById('themeGray').value = t.gray || '';
+            if (document.getElementById('themeAccent')) document.getElementById('themeAccent').value = t.accent || '';
+            if (document.getElementById('themeAccentHover')) document.getElementById('themeAccentHover').value = t.accentHover || '';
+            if (document.getElementById('themeTextMain')) document.getElementById('themeTextMain').value = t.textMain || '';
+            if (document.getElementById('themeTextMuted')) document.getElementById('themeTextMuted').value = t.textMuted || '';
+            if (document.getElementById('themeBorder')) document.getElementById('themeBorder').value = t.border || '';
+            if (document.getElementById('themeNavActiveBg')) document.getElementById('themeNavActiveBg').value = t.navActiveBg || '';
+            if (document.getElementById('themeGroupGradientStart')) document.getElementById('themeGroupGradientStart').value = t.groupGradientStart || '';
+            if (document.getElementById('themeGroupGradientEnd')) document.getElementById('themeGroupGradientEnd').value = t.groupGradientEnd || '';
         }
     } catch (e) {}
 }
@@ -1064,7 +1077,21 @@ async function handleSettingsSubmit(event) {
         page_bg_color: document.getElementById('pageBgColor') ? document.getElementById('pageBgColor').value.trim() || null : null,
         page_bg_image: document.getElementById('pageBgImage') ? document.getElementById('pageBgImage').value.trim() || null : null,
         nav_bg_color: document.getElementById('navBgColor') ? document.getElementById('navBgColor').value.trim() || null : null,
-        nav_bg_image: document.getElementById('navBgImage') ? document.getElementById('navBgImage').value.trim() || null : null
+        nav_bg_image: document.getElementById('navBgImage') ? document.getElementById('navBgImage').value.trim() || null : null,
+        theme: {
+            primary: document.getElementById('themePrimary') ? document.getElementById('themePrimary').value.trim() || null : null,
+            primaryHover: document.getElementById('themePrimaryHover') ? document.getElementById('themePrimaryHover').value.trim() || null : null,
+            danger: document.getElementById('themeDanger') ? document.getElementById('themeDanger').value.trim() || null : null,
+            gray: document.getElementById('themeGray') ? document.getElementById('themeGray').value.trim() || null : null,
+            accent: document.getElementById('themeAccent') ? document.getElementById('themeAccent').value.trim() || null : null,
+            accentHover: document.getElementById('themeAccentHover') ? document.getElementById('themeAccentHover').value.trim() || null : null,
+            textMain: document.getElementById('themeTextMain') ? document.getElementById('themeTextMain').value.trim() || null : null,
+            textMuted: document.getElementById('themeTextMuted') ? document.getElementById('themeTextMuted').value.trim() || null : null,
+            border: document.getElementById('themeBorder') ? document.getElementById('themeBorder').value.trim() || null : null,
+            navActiveBg: document.getElementById('themeNavActiveBg') ? document.getElementById('themeNavActiveBg').value.trim() || null : null,
+            groupGradientStart: document.getElementById('themeGroupGradientStart') ? document.getElementById('themeGroupGradientStart').value.trim() || null : null,
+            groupGradientEnd: document.getElementById('themeGroupGradientEnd') ? document.getElementById('themeGroupGradientEnd').value.trim() || null : null
+        }
     };
     try {
         await updateSettings(data);
@@ -1100,6 +1127,20 @@ function applySettings(settings) {
                 nav.style.background = settings.nav_bg_color;
             }
         }
+        const t = settings.theme || {};
+        const root = document.documentElement;
+        if (t.primary) root.style.setProperty('--color-primary', t.primary);
+        if (t.primaryHover) root.style.setProperty('--color-primary-hover', t.primaryHover);
+        if (t.danger) root.style.setProperty('--color-danger', t.danger);
+        if (t.gray) root.style.setProperty('--color-gray', t.gray);
+        if (t.accent) root.style.setProperty('--color-accent', t.accent);
+        if (t.accentHover) root.style.setProperty('--color-accent-hover', t.accentHover);
+        if (t.textMain) root.style.setProperty('--text-main', t.textMain);
+        if (t.textMuted) root.style.setProperty('--text-muted', t.textMuted);
+        if (t.border) root.style.setProperty('--border-color', t.border);
+        if (t.navActiveBg) root.style.setProperty('--nav-active-bg', t.navActiveBg);
+        if (t.groupGradientStart) root.style.setProperty('--group-gradient-start', t.groupGradientStart);
+        if (t.groupGradientEnd) root.style.setProperty('--group-gradient-end', t.groupGradientEnd);
     } catch (e) {}
 }
 
