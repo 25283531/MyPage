@@ -1,5 +1,5 @@
 // 从全局变量中获取 API 地址，失败时自动回退到同源 '/api'
-let API_BASE_URL = 'https://ancient.pdszxh.workers.dev/api';
+let API_BASE_URL = 'https://naviback.pdszxh.workers.dev/api';
 let token = null;
 
 // Token 管理
