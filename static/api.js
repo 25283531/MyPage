@@ -1,5 +1,5 @@
 // 从全局变量中获取 API 地址，失败时自动回退到同源 '/api'
-let API_BASE_URL = 'https://naviback.pdszxh.workers.dev/api';
+let API_BASE_URL = 'https://ancient.pdszxh.workers.dev/api';
 let token = null;
 
 // Token 管理
@@ -65,29 +65,18 @@ async function fetchAPI(endpoint, options = {}) {
 // API 函数
 async function login(password) {
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const data = await fetchAPI('/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({ password })
         });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || '登录失败');
-        }
-        
-        const data = await response.json();
-        if (data.token) {
+        if (data && data.token) {
             setToken(data.token);
-        } else {
-            throw new Error('登录响应中没有找到 token');
+            return data;
         }
-        return data;
+        throw new Error('登录响应中没有找到 token');
     } catch (error) {
         setToken(null);
-        throw new Error(error.message || '密码错误');
+        throw new Error(error.message || '登录失败');
     }
 }
 
