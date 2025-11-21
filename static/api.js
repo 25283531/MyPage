@@ -1,5 +1,5 @@
-// 从全局变量中获取 API 地址，并添加 /api 路径
-const API_BASE_URL = 'https://naviback.pdszxh.workers.dev//api';
+// 从全局变量中获取 API 地址，失败时自动回退到同源 '/api'
+let API_BASE_URL = 'https://naviback.pdszxh.workers.dev/api';
 let token = null;
 
 // Token 管理
@@ -25,20 +25,41 @@ async function fetchAPI(endpoint, options = {}) {
         };
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'API请求失败');
         }
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API请求失败');
+        return response.json();
+    } catch (err) {
+        if (API_BASE_URL !== '/api') {
+            API_BASE_URL = '/api';
+            const retry = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            if (!retry.ok) {
+                try {
+                    const errorData = await retry.json();
+                    throw new Error(errorData.error || 'API请求失败');
+                } catch (e) {
+                    throw new Error('API请求失败');
+                }
+            }
+            return retry.json();
+        }
+        throw err;
     }
-
-    return response.json();
 }
 
 // API 函数
