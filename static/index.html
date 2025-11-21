@@ -121,6 +121,23 @@
                     <input type="checkbox" id="groupPrivate">
                     私密分组
                 </label>
+                <input type="text" id="groupBgColor" placeholder="分组背景色，例如 #ffffff 或 rgba(...)">
+                <input type="text" id="groupBgImage" placeholder="分组背景图地址（可选）">
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 页面设置模态框 -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettingsModal()"></span>
+            <h2>页面设置</h2>
+            <form id="settingsForm" onsubmit="handleSettingsSubmit(event)">
+                <input type="text" id="pageBgColor" placeholder="页面背景色，例如 #f6f9fc">
+                <input type="text" id="pageBgImage" placeholder="页面背景图地址（可选）">
+                <input type="text" id="navBgColor" placeholder="左侧导航背景色">
+                <input type="text" id="navBgImage" placeholder="左侧导航背景图地址（可选）">
                 <button type="submit">保存</button>
             </form>
         </div>
@@ -129,4 +146,4 @@
     <script src="api.js"></script>
     <script src="app.js"></script>
 </body>
-</html> 
+</html>

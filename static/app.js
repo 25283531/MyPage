@@ -59,6 +59,10 @@ async function checkLoginStatus() {
 }
 
 async function initializePage() {
+    try {
+        const settings = await fetchSettings();
+        applySettings(settings || {});
+    } catch (e) {}
     await loadNavigation();
 }
 
@@ -306,7 +310,9 @@ async function handleGroupSubmit(event) {
     const formData = {
         name: document.getElementById('groupName').value,
         is_private: document.getElementById('groupPrivate').checked,
-        order_num: groupId ? parseInt(event.target.dataset.orderNum) || 0 : maxOrderNum + 1
+        order_num: groupId ? parseInt(event.target.dataset.orderNum) || 0 : maxOrderNum + 1,
+        bg_color: document.getElementById('groupBgColor') ? document.getElementById('groupBgColor').value.trim() || null : null,
+        bg_image: document.getElementById('groupBgImage') ? document.getElementById('groupBgImage').value.trim() || null : null
     };
     
     try {
@@ -416,6 +422,9 @@ async function loadNavigation() {
                     <button onclick="openLinkModal()">
                         <i class="fas fa-link"></i> 添加链接
                     </button>
+                    <button onclick="openSettingsModal()">
+                        <i class="fas fa-paint-roller"></i> 页面设置
+                    </button>
                 </div>
             `;
         }
@@ -433,7 +442,7 @@ async function loadNavigation() {
                 const groupId = `group-${group.id}`;
                 
                 html += `
-                    <div id="${groupId}" class="group">
+                    <div id="${groupId}" class="group" style="${getGroupStyle(group)}">
                         <div class="group-title">
                             ${getGroupTitle(group)}
                             ${getGroupActions(group.id)}
@@ -615,6 +624,12 @@ async function loadGroupData(groupId) {
             const form = document.getElementById('groupForm');
             form.dataset.groupId = groupId;
             form.dataset.orderNum = group.order_num;
+            if (document.getElementById('groupBgColor')) {
+                document.getElementById('groupBgColor').value = group.bg_color || '';
+            }
+            if (document.getElementById('groupBgImage')) {
+                document.getElementById('groupBgImage').value = group.bg_image || '';
+            }
         }
     } catch (error) {
         showToast('加载分组数据失败: ' + error.message, 'error');
@@ -1012,4 +1027,90 @@ async function loadIcons() {
             }
         }
     }
+}
+
+function openSettingsModal() {
+    if (!isEditMode) {
+        showToast('请先登录管理员账号');
+        return;
+    }
+    const modal = document.getElementById('settingsModal');
+    const form = document.getElementById('settingsForm');
+    form.reset();
+    loadSettingsData();
+    modal.style.display = 'block';
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    modal.style.display = 'none';
+}
+
+async function loadSettingsData() {
+    try {
+        const settings = await fetchSettings();
+        if (settings) {
+            if (document.getElementById('pageBgColor')) document.getElementById('pageBgColor').value = settings.page_bg_color || '';
+            if (document.getElementById('pageBgImage')) document.getElementById('pageBgImage').value = settings.page_bg_image || '';
+            if (document.getElementById('navBgColor')) document.getElementById('navBgColor').value = settings.nav_bg_color || '';
+            if (document.getElementById('navBgImage')) document.getElementById('navBgImage').value = settings.nav_bg_image || '';
+        }
+    } catch (e) {}
+}
+
+async function handleSettingsSubmit(event) {
+    event.preventDefault();
+    const data = {
+        page_bg_color: document.getElementById('pageBgColor') ? document.getElementById('pageBgColor').value.trim() || null : null,
+        page_bg_image: document.getElementById('pageBgImage') ? document.getElementById('pageBgImage').value.trim() || null : null,
+        nav_bg_color: document.getElementById('navBgColor') ? document.getElementById('navBgColor').value.trim() || null : null,
+        nav_bg_image: document.getElementById('navBgImage') ? document.getElementById('navBgImage').value.trim() || null : null
+    };
+    try {
+        await updateSettings(data);
+        closeSettingsModal();
+        showToast('设置已保存');
+        applySettings(data);
+    } catch (error) {
+        showToast('保存失败: ' + error.message, 'error');
+    }
+}
+
+function applySettings(settings) {
+    try {
+        const body = document.body;
+        if (settings.page_bg_image) {
+            body.style.backgroundImage = `url(${settings.page_bg_image})`;
+            body.style.backgroundSize = 'cover';
+            body.style.backgroundPosition = 'center';
+            body.style.backgroundRepeat = 'no-repeat';
+        } else if (settings.page_bg_color) {
+            body.style.backgroundImage = '';
+            body.style.background = settings.page_bg_color;
+        }
+        const nav = document.querySelector('.nav-sidebar');
+        if (nav) {
+            if (settings.nav_bg_image) {
+                nav.style.backgroundImage = `url(${settings.nav_bg_image})`;
+                nav.style.backgroundSize = 'cover';
+                nav.style.backgroundPosition = 'center';
+                nav.style.backgroundRepeat = 'no-repeat';
+            } else if (settings.nav_bg_color) {
+                nav.style.backgroundImage = '';
+                nav.style.background = settings.nav_bg_color;
+            }
+        }
+    } catch (e) {}
+}
+
+function getGroupStyle(group) {
+    const color = group.bg_color || '';
+    const image = group.bg_image || '';
+    if (image) {
+        return `background-image:url(${image});background-size:cover;background-position:center;`;
+    }
+    if (color) {
+        return `background:${color};`;
+    }
+    return '';
 }

@@ -134,4 +134,15 @@ async function fetchWebInfo(url) {
     }
 
     return response.json();
-} 
+}
+
+async function fetchSettings() {
+    return fetchAPI('/settings');
+}
+
+async function updateSettings(data) {
+    return fetchAPI('/settings', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+}

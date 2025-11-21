@@ -153,18 +153,19 @@ async function handleGroups(request, env) {
 
     // POST /api/groups - 创建新分组
     if (request.method === 'POST' && path === '/api/groups') {
-      const { name, order_num, is_private } = await request.json();
-      
+      const { name, order_num, is_private, bg_color, bg_image } = await request.json();
       const result = await env.DB.prepare(
-        'INSERT INTO Groups (name, order_num, is_private) VALUES (?, ?, ?)'
-      ).bind(name, order_num || 0, is_private || false)
+        'INSERT INTO Groups (name, order_num, is_private, bg_color, bg_image) VALUES (?, ?, ?, ?, ?)'
+      ).bind(name, order_num || 0, is_private || false, bg_color || null, bg_image || null)
         .run();
 
       return new Response(JSON.stringify({
         id: result.lastRowId,
         name,
         order_num,
-        is_private
+        is_private,
+        bg_color,
+        bg_image
       }), { headers });
     }
 
@@ -175,18 +176,19 @@ async function handleGroups(request, env) {
 
     // PUT /api/groups/:id - 更新分组
     if (request.method === 'PUT') {
-      const { name, order_num, is_private } = await request.json();
-      
+      const { name, order_num, is_private, bg_color, bg_image } = await request.json();
       await env.DB.prepare(
-        'UPDATE Groups SET name = ?, order_num = ?, is_private = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-      ).bind(name, order_num || 0, is_private || false, id)
+        'UPDATE Groups SET name = ?, order_num = ?, is_private = ?, bg_color = ?, bg_image = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).bind(name, order_num || 0, is_private || false, bg_color || null, bg_image || null, id)
         .run();
 
       return new Response(JSON.stringify({
         id: parseInt(id),
         name,
         order_num: order_num || 0,
-        is_private
+        is_private,
+        bg_color,
+        bg_image
       }), { headers });
     }
 
@@ -459,6 +461,8 @@ export default {
         return await handleGroups(request, env);
       } else if (path.startsWith('/api/links')) {
         return await handleLinks(request, env);
+      } else if (path.startsWith('/api/settings')) {
+        return await handleSettings(request, env);
       }
 
       return new Response('无效的请求路径', { 
@@ -479,4 +483,60 @@ export default {
       });
     }
   },
-}; 
+};
+
+async function handleSettings(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+  const isAdmin = await verifyAdmin(request, env);
+
+  const headers = {
+    ...corsHeaders(),
+    'Content-Type': 'application/json',
+  };
+
+  try {
+    if (request.method === 'GET' && path === '/api/settings') {
+      const row = await env.DB.prepare('SELECT * FROM Settings WHERE id = 1').first();
+      return new Response(JSON.stringify(row || {}), { headers });
+    }
+
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: '需要管理员权限' }), {
+        status: 401,
+        headers
+      });
+    }
+
+    if (request.method === 'PUT' && path === '/api/settings') {
+      const { page_bg_color, page_bg_image, nav_bg_color, nav_bg_image } = await request.json();
+      const exists = await env.DB.prepare('SELECT id FROM Settings WHERE id = 1').first();
+      if (exists) {
+        await env.DB.prepare(
+          'UPDATE Settings SET page_bg_color = ?, page_bg_image = ?, nav_bg_color = ?, nav_bg_image = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1'
+        ).bind(page_bg_color || null, page_bg_image || null, nav_bg_color || null, nav_bg_image || null)
+          .run();
+      } else {
+        await env.DB.prepare(
+          'INSERT INTO Settings (id, page_bg_color, page_bg_image, nav_bg_color, nav_bg_image) VALUES (1, ?, ?, ?, ?)'
+        ).bind(page_bg_color || null, page_bg_image || null, nav_bg_color || null, nav_bg_image || null)
+          .run();
+      }
+
+      return new Response(JSON.stringify({
+        id: 1,
+        page_bg_color,
+        page_bg_image,
+        nav_bg_color,
+        nav_bg_image
+      }), { headers });
+    }
+
+    return new Response('方法不允许', { status: 405, headers });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 400, 
+      headers 
+    });
+  }
+}
