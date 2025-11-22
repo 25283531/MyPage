@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航页</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="toast.css">
+    <style>body{margin:0}</style>
+ </head>
+<body>
+    <div id="toastContainer" class="toast-container"></div>
+    <div id="confirmDialog" class="confirm-dialog">
+        <div class="confirm-content">
+            <div class="confirm-title"></div>
+            <div class="confirm-message"></div>
+            <div class="confirm-buttons">
+                <button class="confirm-button confirm-cancel">取消</button>
+                <button class="confirm-button confirm-ok">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="nav-sidebar">
+            <div class="nav-title">目录导航</div>
+            <div id="groupNav" class="nav-list"></div>
+        </div>
+
+        <div class="main-content">
+            <div class="page-header">
+                <div class="header">
+                    <form class="search-form" onsubmit="handleSearch(event)">
+                        <div class="search-bar">
+                            <div class="search-icon"><i class="fas fa-search"></i></div>
+                            <input type="text" id="searchInput" placeholder="搜索...">
+                            <select id="searchEngine">
+                                <option value="baidu">百度</option>
+                                <option value="google">Google</option>
+                                <option value="bing">Bing</option>
+                            </select>
+                        </div>
+                    </form>
+                    <div class="header-actions">
+                        <a href="https://github.com/yvyan/MyPage" target="_blank" class="github-link" title="查看源码">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <div id="adminButton">
+                            <button class="admin-button" onclick="openAdminModal()"><i class="fas fa-user-lock"></i> 管理员登录</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="navigation" class="navigation">
+                <div class="loading">
+                    <div class="loading-wave"><div></div><div></div></div>
+                    <div>加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAdminModal()"></span>
+            <h2>管理员登录</h2>
+            <form id="adminForm" onsubmit="handleLogin(event)">
+                <input type="password" id="adminPassword" placeholder="请输入管理员密码" required>
+                <button type="submit">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="linkModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLinkModal()"></span>
+            <h2>管理链接</h2>
+            <form id="linkForm" onsubmit="handleLinkSubmit(event)">
+                <input type="url" id="linkUrl" placeholder="链接地址" required>
+                <input type="text" id="linkName" placeholder="链接名称" required>
+                <input type="text" id="linkLogo" placeholder="图标地址">
+                <textarea id="linkDescription" placeholder="链接描述"></textarea>
+                <select id="linkGroup" required><option value="">选择分组...</option></select>
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="groupModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeGroupModal()"></span>
+            <h2>管理分组</h2>
+            <form id="groupForm" onsubmit="handleGroupSubmit(event)">
+                <input type="text" id="groupName" placeholder="分组名称" required>
+                <label><input type="checkbox" id="groupPrivate">私密分组</label>
+                <input type="text" id="groupBgColor" placeholder="分组背景色，例如 #ffffff 或 rgba(...)">
+                <input type="text" id="groupBgImage" placeholder="分组背景图地址（可选）">
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettingsModal()"></span>
+            <h2>页面设置</h2>
+            <form id="settingsForm" onsubmit="handleSettingsSubmit(event)">
+                <input type="text" id="pageBgColor" placeholder="页面背景色，例如 #f6f9fc">
+                <input type="text" id="pageBgImage" placeholder="页面背景图地址（可选）">
+                <input type="text" id="navBgColor" placeholder="左侧导航背景色">
+                <input type="text" id="navBgImage" placeholder="左侧导航背景图地址（可选）">
+                <input type="text" id="themePrimary" placeholder="主色 #409EFF">
+                <input type="text" id="themePrimaryHover" placeholder="主色 hover #3A8EE6">
+                <input type="text" id="themeDanger" placeholder="强调/危险 #F56C6C">
+                <input type="text" id="themeGray" placeholder="次要操作灰 #C0C4CC">
+                <input type="text" id="themeAccent" placeholder="轻量功能区分 #69C0FF">
+                <input type="text" id="themeAccentHover" placeholder="轻量功能 hover #53B0F0">
+                <input type="text" id="themeTextMain" placeholder="主文本 #303133">
+                <input type="text" id="themeTextMuted" placeholder="次文本 #606266">
+                <input type="text" id="themeBorder" placeholder="边框 #E0E0E0">
+                <input type="text" id="themeNavActiveBg" placeholder="导航选中背景 #ECF5FF">
+                <input type="text" id="themeGroupGradientStart" placeholder="分组标题渐变起 #66B1FF">
+                <input type="text" id="themeGroupGradientEnd" placeholder="分组标题渐变终 #409EFF">
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -461,14 +461,19 @@ export default {
         return await handleGroups(request, env);
       } else if (path.startsWith('/api/links')) {
         return await handleLinks(request, env);
-      } else if (path.startsWith('/api/settings')) {
-        return await handleSettings(request, env);
-      }
+  } else if (path.startsWith('/api/settings')) {
+    return await handleSettings(request, env);
+  } else if (path === '/api/export') {
+    return await handleExport(request, env);
+  } else if (path === '/api/import') {
+    return await handleImport(request, env);
+  }
 
       return new Response('无效的请求路径', { 
         status: 404,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...corsHeaders()
         }
       });
     } catch (err) {
@@ -478,7 +483,8 @@ export default {
       }), { 
         status: 500,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...corsHeaders()
         }
       });
     }
@@ -549,5 +555,87 @@ async function handleSettings(request, env) {
       status: 400, 
       headers 
     });
+  }
+}
+
+async function handleExport(request, env) {
+  const headers = { 'Content-Type': 'application/json', ...corsHeaders() };
+  const groups = await env.DB.prepare('SELECT id, name, order_num, is_private, bg_color, bg_image FROM Groups ORDER BY order_num ASC, id ASC').all();
+  const links = await env.DB.prepare('SELECT id, group_id, name, url, logo, description, order_num FROM Links ORDER BY order_num ASC, id ASC').all();
+  const settingsRow = await env.DB.prepare('SELECT * FROM Settings WHERE id = 1').first();
+  let theme = {};
+  try { theme = settingsRow?.theme_json ? JSON.parse(settingsRow.theme_json) : {}; } catch {}
+  const payload = {
+    version: 'old',
+    groups: groups.results || [],
+    links: links.results || [],
+    settings: {
+      page_bg_color: settingsRow?.page_bg_color || null,
+      page_bg_image: settingsRow?.page_bg_image || null,
+      nav_bg_color: settingsRow?.nav_bg_color || null,
+      nav_bg_image: settingsRow?.nav_bg_image || null,
+      theme
+    }
+  };
+  return new Response(JSON.stringify(payload), { headers });
+}
+
+async function handleImport(request, env) {
+  const headers = { 'Content-Type': 'application/json', ...corsHeaders() };
+  const isAdmin = await verifyAdmin(request, env);
+  if (!isAdmin) return new Response(JSON.stringify({ error: '需要管理员权限' }), { status: 401, headers });
+  const data = await request.json();
+  const groups = Array.isArray(data.groups) ? data.groups : [];
+  const links = Array.isArray(data.links) ? data.links : [];
+  const settings = data.settings || {};
+  await env.DB.prepare('BEGIN').run();
+  try {
+    await env.DB.prepare('DELETE FROM Links').run();
+    await env.DB.prepare('DELETE FROM Groups').run();
+    for (const g of groups) {
+      const id = g.id != null ? Number(g.id) : undefined;
+      const name = g.name;
+      const order_num = g.order_num != null ? Number(g.order_num) : (g.order_index != null ? Number(g.order_index) : 0);
+      const is_private = g.is_private != null ? !!g.is_private : false;
+      const bg_color = g.bg_color || null;
+      const bg_image = g.bg_image || null;
+      if (id != null) {
+        await env.DB.prepare('INSERT INTO Groups (id, name, order_num, is_private, bg_color, bg_image) VALUES (?, ?, ?, ?, ?, ?)')
+          .bind(id, name, order_num, is_private, bg_color, bg_image).run();
+      } else {
+        await env.DB.prepare('INSERT INTO Groups (name, order_num, is_private, bg_color, bg_image) VALUES (?, ?, ?, ?, ?)')
+          .bind(name, order_num, is_private, bg_color, bg_image).run();
+      }
+    }
+    for (const l of links) {
+      const id = l.id != null ? Number(l.id) : undefined;
+      const group_id = Number(l.group_id);
+      const name = l.name;
+      const url = l.url;
+      const logo = l.logo || null;
+      const description = l.description || null;
+      const order_num = l.order_num != null ? Number(l.order_num) : (l.order_index != null ? Number(l.order_index) : 0);
+      if (id != null) {
+        await env.DB.prepare('INSERT INTO Links (id, group_id, name, url, logo, description, order_num) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .bind(id, group_id, name, url, logo, description, order_num).run();
+      } else {
+        await env.DB.prepare('INSERT INTO Links (group_id, name, url, logo, description, order_num) VALUES (?, ?, ?, ?, ?, ?)')
+          .bind(group_id, name, url, logo, description, order_num).run();
+      }
+    }
+    const theme_json = settings.theme ? JSON.stringify(settings.theme) : null;
+    const exists = await env.DB.prepare('SELECT id FROM Settings WHERE id = 1').first();
+    if (exists) {
+      await env.DB.prepare('UPDATE Settings SET page_bg_color = ?, page_bg_image = ?, nav_bg_color = ?, nav_bg_image = ?, theme_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1')
+        .bind(settings.page_bg_color || null, settings.page_bg_image || null, settings.nav_bg_color || null, settings.nav_bg_image || null, theme_json).run();
+    } else {
+      await env.DB.prepare('INSERT INTO Settings (id, page_bg_color, page_bg_image, nav_bg_color, nav_bg_image, theme_json) VALUES (1, ?, ?, ?, ?, ?)')
+        .bind(settings.page_bg_color || null, settings.page_bg_image || null, settings.nav_bg_color || null, settings.nav_bg_image || null, theme_json).run();
+    }
+    await env.DB.prepare('COMMIT').run();
+    return new Response(JSON.stringify({ ok: true }), { headers });
+  } catch (err) {
+    await env.DB.prepare('ROLLBACK').run();
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
   }
 }

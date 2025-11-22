@@ -1,5 +1,5 @@
-// 从全局变量中获取 API 地址，并添加 /api 路径
-const API_BASE_URL = 'https://ancient.pdszxh.workers.dev/api';
+// 从全局变量中获取 API 地址，失败时自动回退到同源 '/api'
+let API_BASE_URL = 'https://ancient.pdszxh.workers.dev/api';
 let token = null;
 
 // Token 管理
@@ -25,17 +25,37 @@ async function fetchAPI(endpoint, options = {}) {
         };
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
+    let response;
+    try {
+        response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    } catch (networkErr) {
+        if (API_BASE_URL !== '/api') {
+            API_BASE_URL = '/api';
+            response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+        } else {
+            throw networkErr;
         }
-    });
+    }
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API请求失败');
+        let errorText = 'API请求失败';
+        try {
+            const errorData = await response.json();
+            errorText = errorData.error || errorText;
+        } catch {}
+        throw new Error(errorText);
     }
 
     return response.json();
@@ -44,29 +64,18 @@ async function fetchAPI(endpoint, options = {}) {
 // API 函数
 async function login(password) {
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const data = await fetchAPI('/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({ password })
         });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || '登录失败');
-        }
-        
-        const data = await response.json();
-        if (data.token) {
+        if (data && data.token) {
             setToken(data.token);
-        } else {
-            throw new Error('登录响应中没有找到 token');
+            return data;
         }
-        return data;
+        throw new Error('登录响应中没有找到 token');
     } catch (error) {
         setToken(null);
-        throw new Error(error.message || '密码错误');
+        throw new Error(error.message || '登录失败');
     }
 }
 
@@ -141,8 +150,19 @@ async function fetchSettings() {
 }
 
 async function updateSettings(data) {
-    return fetchAPI('/settings', {
-        method: 'PUT',
-        body: JSON.stringify(data)
-    });
+  return fetchAPI('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+}
+
+async function exportData() {
+  return fetchAPI('/export');
+}
+
+async function importData(payload) {
+  return fetchAPI('/import', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
 }

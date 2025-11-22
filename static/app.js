@@ -425,6 +425,12 @@ async function loadNavigation() {
                     <button class="btn btn-accent" onclick="openSettingsModal()">
                         <i class="fas fa-paint-roller"></i> 页面设置
                     </button>
+                    <button class="btn btn-accent" onclick="handleExport()">
+                        <i class="fas fa-download"></i> 导出数据
+                    </button>
+                    <button class="btn btn-accent" onclick="triggerImport()">
+                        <i class="fas fa-upload"></i> 导入数据
+                    </button>
                 </div>
             `;
         }
@@ -1154,4 +1160,49 @@ function getGroupStyle(group) {
         return `background:${color};`;
     }
     return '';
+}
+
+async function handleExport() {
+    const toast = showToast('正在导出...', 'loading');
+    try {
+        const data = await exportData();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        const ts = new Date();
+        const pad = (n)=>String(n).padStart(2,'0');
+        const name = `mypage-export-${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}-${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast.remove();
+        showToast('导出完成');
+    } catch (e) {
+        toast.remove();
+        showToast('导出失败: ' + e.message, 'error');
+    }
+}
+
+function triggerImport() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        const toast = showToast('正在导入...', 'loading');
+        try {
+            const text = await file.text();
+            const payload = JSON.parse(text);
+            await importData(payload);
+            toast.remove();
+            showToast('导入完成');
+            await loadNavigation();
+        } catch (e) {
+            toast.remove();
+            showToast('导入失败: ' + e.message, 'error');
+        }
+    };
+    input.click();
 }
