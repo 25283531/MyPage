@@ -474,6 +474,8 @@ export default {
         headers: {
           'Content-Type': 'application/json',
           ...corsHeaders()
+          'Content-Type': 'application/json',
+          ...corsHeaders()
         }
       });
     } catch (err) {
@@ -483,6 +485,8 @@ export default {
       }), { 
         status: 500,
         headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders()
           'Content-Type': 'application/json',
           ...corsHeaders()
         }

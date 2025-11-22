@@ -65,16 +65,21 @@ async function fetchAPI(endpoint, options = {}) {
 async function login(password) {
     try {
         const data = await fetchAPI('/login', {
+        const data = await fetchAPI('/login', {
             method: 'POST',
             body: JSON.stringify({ password })
         });
         if (data && data.token) {
+        if (data && data.token) {
             setToken(data.token);
+            return data;
             return data;
         }
         throw new Error('登录响应中没有找到 token');
+        throw new Error('登录响应中没有找到 token');
     } catch (error) {
         setToken(null);
+        throw new Error(error.message || '登录失败');
         throw new Error(error.message || '登录失败');
     }
 }
